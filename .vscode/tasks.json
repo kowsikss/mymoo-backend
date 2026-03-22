@@ -1,0 +1,109 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node server.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node server.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node server.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node server.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server with WebSocket",
+			"type": "shell",
+			"command": "node websocket.js",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}
