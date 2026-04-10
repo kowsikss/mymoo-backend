@@ -5,7 +5,8 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const Breed = require("./models/Breed");
-
+const kosalaAdminRoutes = require('./routes/kosalaAdminRoutes');
+require("dotenv").config(); // ✅ must be at the very top
 const app = express();
 
 /* =============================
@@ -88,6 +89,27 @@ async function startServer() {
     // Add this line with your other routes
 app.use("/api/rescued", require("./routes/rescuedRoutes"));
 app.use("/api/inventory", require("./routes/inventoryRoutes"));
+app.use("/api/kosala-admin", require("./routes/kosalaAdminRoutes"));
+// Add this before your other routes
+
+app.use('/api', kosalaAdminRoutes);
+app.get('/api/admins', async (req, res) => {
+  try {
+    // If you have Admin model
+    // const admins = await Admin.find().populate('kosalaId');
+    
+    // If you have User model with role
+    const admins = await User.find({ role: 'admin' }).populate('kosalaId');
+    
+    res.json(admins);
+  } catch (error) {
+    console.error('Error in /api/admins:', error);
+    res.status(500).json({ 
+      message: 'Error fetching admins', 
+      error: error.message 
+    });
+  }
+});
 
 app.use("/api/alerts", require("./routes/alertRoutes"));
     // ✅ Use server.listen (NOT app.listen) so Socket.IO works

@@ -26,6 +26,7 @@ const gaushalaSchema = new mongoose.Schema(
     certificateFile: { type: String, required: true },
     contactNumber: { type: String, required: true },
     email: { type: String, required: true },
+    admin: { type: String, default: null }, 
     
   },
   { timestamps: true }
