@@ -118,7 +118,7 @@ async function startServer() {
     /* =============================
        START SERVER (CRITICAL FIX)
     ============================= */
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT;
 
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on port ${PORT}`);
