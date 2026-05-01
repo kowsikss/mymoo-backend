@@ -8,7 +8,8 @@ const Breed = require("./models/Breed");
 const kosalaAdminRoutes = require('./routes/kosalaAdminRoutes');
 require("dotenv").config(); // ✅ must be at the very top
 const app = express();
-
+const gaushalaRequestRoutes = require("./routes/gaushalaRequestRoutes");
+const donationRoutes         = require("./routes/donationRoutes");
 /* =============================
    MIDDLEWARE
 ============================= */
@@ -16,6 +17,13 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
+
+
+
+// gaushala donation  
+
+app.use("/api/gaushala-requests", gaushalaRequestRoutes);
+app.use("/api/donations",         donationRoutes);
 /* =============================
    SEED BREEDS
 ============================= */

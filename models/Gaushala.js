@@ -27,6 +27,8 @@ const gaushalaSchema = new mongoose.Schema(
     contactNumber: { type: String, required: true },
     email: { type: String, required: true },
     admin: { type: String, default: null }, 
+    lat: { type: Number, default: null },
+lon: { type: Number, default: null },
     
   },
   { timestamps: true }
