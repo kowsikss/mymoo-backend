@@ -12,7 +12,12 @@ const app = express();
 /* =============================
    MIDDLEWARE
 ============================= */
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://mymoo-admin.up.railway.app',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
@@ -60,8 +65,9 @@ async function startServer() {
     const server = http.createServer(app);
     const io = new Server(server, {
       cors: {
-        origin: "*",
-      },
+        origin: process.env.FRONTEND_URL || 'https://mymoo-admin.up.railway.app',
+        credentials: true
+      }
     });
 
     io.on("connection", (socket) => {
