@@ -49,6 +49,12 @@ async function seedBreeds() {
         { name: "Kankrej" },
         { name: "Hariana" },
         { name: "Deoni" },
+        {name:"Girolanda"},
+        {name:"Kangeyam"},
+        {name:"Cross breed"},
+        {name:"Punganur"},
+        {name:"Theni"},
+        {name:"Malaimadu(thevarai)"},
       ]);
       console.log("✅ Breeds added successfully");
     } else {
