@@ -1,7 +1,22 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const router = express.Router();
 
 const Cow = require("../models/Cow");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = "uploads/cows";
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage });
 
 module.exports = (io) => {
 
@@ -69,42 +84,65 @@ module.exports = (io) => {
   });
 
   // ADD COW
-  router.post("/", async (req, res) => {
+  router.post(
+    "/",
+    upload.fields([
+      { name: "front", maxCount: 1 },
+      { name: "side", maxCount: 1 },
+      { name: "back", maxCount: 1 },
+      { name: "insuranceCert", maxCount: 1 },
+      { name: "frontImage", maxCount: 1 },
+      { name: "sideImage", maxCount: 1 },
+      { name: "backImage", maxCount: 1 },
+    ]),
+    async (req, res) => {
 
-    try {
+      try {
 
-      console.log("BODY:", req.body);
+        console.log("BODY:", req.body);
+        console.log("FILES:", req.files);
 
-      const {
+        const {
 
-        kosalaId,
-        type,
-        breed,
-        age,
-        ageUnit,
-        weight,
-        registrationDate,
-        calfStatus,
-        tagNumber,
-        vaccinationDate,
-        dewormingDate,
-        insuranceStatus,
-        healthStatus,
-        monthlyAmountSpent,
-        hasDisease,
-        diseaseName,
-        diseaseDate,
-        treatmentDate,
-        feedType,
-        feedAmountKg,
+          kosalaId,
+          type,
+          breed,
+          age,
+          ageUnit,
+          weight,
+          registrationDate,
+          calfStatus,
+          tagNumber,
+          vaccinationDate,
+          dewormingDate,
+          insuranceStatus,
+          healthStatus,
+          monthlyAmountSpent,
+          hasDisease,
+          diseaseName,
+          diseaseDate,
+          treatmentDate,
+          feedType,
+          feedAmountKg,
 
-        // ✅ R2 URLs
-        front,
-        side,
-        back,
-        insuranceCert,
+          // ✅ R2 URLs or string fields
+          front,
+          side,
+          back,
+          insuranceCert,
 
-      } = req.body;
+        } = req.body;
+
+        const files = req.files || {};
+        const uploadedPublicUrl = (field) => {
+          const uploaded = files[field]?.[0];
+          return uploaded ? `/uploads/cows/${uploaded.filename}` : null;
+        };
+
+        const frontImageFile = uploadedPublicUrl("front") || uploadedPublicUrl("frontImage");
+        const sideImageFile = uploadedPublicUrl("side") || uploadedPublicUrl("sideImage");
+        const backImageFile = uploadedPublicUrl("back") || uploadedPublicUrl("backImage");
+        const insuranceCertFile = uploadedPublicUrl("insuranceCert");
 
       if (!kosalaId) {
 
@@ -162,18 +200,11 @@ module.exports = (io) => {
         feedType,
         feedAmountKg,
 
-        // ✅ SAVE R2 URLS
-       frontImage:
-  req.body.front || null,
-
-sideImage:
-  req.body.side || null,
-
-backImage:
-  req.body.back || null,
-
-insuranceCert:
-  req.body.insuranceCert || null,
+        // ✅ SAVE uploaded files or fallback to provided URLs
+        frontImage: frontImageFile || front || null,
+        sideImage: sideImageFile || side || null,
+        backImage: backImageFile || back || null,
+        insuranceCert: insuranceCertFile || insuranceCert || null,
 
       });
 
@@ -205,14 +236,55 @@ insuranceCert:
   });
 
   // UPDATE COW
-  router.put("/:id", async (req, res) => {
+  router.put(
+    "/:id",
+    upload.fields([
+      { name: "front", maxCount: 1 },
+      { name: "side", maxCount: 1 },
+      { name: "back", maxCount: 1 },
+      { name: "insuranceCert", maxCount: 1 },
+      { name: "frontImage", maxCount: 1 },
+      { name: "sideImage", maxCount: 1 },
+      { name: "backImage", maxCount: 1 },
+    ]),
+    async (req, res) => {
 
-    try {
+      try {
+        const files = req.files || {};
+        const uploadedPublicUrl = (field) => {
+          const uploaded = files[field]?.[0];
+          return uploaded ? `/uploads/cows/${uploaded.filename}` : null;
+        };
 
-      const updated =
-        await Cow.findByIdAndUpdate(
+        const updateData = {
+          ...req.body,
+          frontImage:
+            uploadedPublicUrl("front") ||
+            uploadedPublicUrl("frontImage") ||
+            req.body.front ||
+            req.body.frontImage ||
+            undefined,
+          sideImage:
+            uploadedPublicUrl("side") ||
+            uploadedPublicUrl("sideImage") ||
+            req.body.side ||
+            req.body.sideImage ||
+            undefined,
+          backImage:
+            uploadedPublicUrl("back") ||
+            uploadedPublicUrl("backImage") ||
+            req.body.back ||
+            req.body.backImage ||
+            undefined,
+          insuranceCert:
+            uploadedPublicUrl("insuranceCert") ||
+            req.body.insuranceCert ||
+            undefined,
+        };
+
+        const updated = await Cow.findByIdAndUpdate(
           req.params.id,
-          req.body,
+          updateData,
           { new: true }
         );
 
