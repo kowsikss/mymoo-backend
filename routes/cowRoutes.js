@@ -18,6 +18,21 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+const isBase64Image = (value) =>
+  typeof value === "string" && value.startsWith("data:image/");
+
+const saveBase64Image = (value, prefix) => {
+  if (!isBase64Image(value)) return null;
+  const match = value.match(/^data:(image\/\w+);base64,(.+)$/);
+  if (!match) return null;
+  const ext = match[1].split("/")[1];
+  const buffer = Buffer.from(match[2], "base64");
+  const filename = `${Date.now()}-${prefix}.${ext}`;
+  const filepath = path.join("uploads/cows", filename);
+  fs.writeFileSync(filepath, buffer);
+  return `/uploads/cows/${filename}`;
+};
+
 module.exports = (io) => {
 
   // GET ALL COWS
@@ -84,18 +99,7 @@ module.exports = (io) => {
   });
 
   // ADD COW
-  router.post(
-    "/",
-    upload.fields([
-      { name: "front", maxCount: 1 },
-      { name: "side", maxCount: 1 },
-      { name: "back", maxCount: 1 },
-      { name: "insuranceCert", maxCount: 1 },
-      { name: "frontImage", maxCount: 1 },
-      { name: "sideImage", maxCount: 1 },
-      { name: "backImage", maxCount: 1 },
-    ]),
-    async (req, res) => {
+  router.post("/", upload.any(), async (req, res) => {
 
       try {
 
@@ -133,16 +137,27 @@ module.exports = (io) => {
 
         } = req.body;
 
-        const files = req.files || {};
-        const uploadedPublicUrl = (field) => {
-          const uploaded = files[field]?.[0];
-          return uploaded ? `/uploads/cows/${uploaded.filename}` : null;
-        };
+        const files = Array.isArray(req.files) ? req.files : [];
+        const publicUrlFromFile = (file) => (file ? `/uploads/cows/${file.filename}` : null);
+        const findFile = (names) => files.find((file) =>
+          names.some((name) => file.fieldname?.toLowerCase().includes(name))
+        );
 
-        const frontImageFile = uploadedPublicUrl("front") || uploadedPublicUrl("frontImage");
-        const sideImageFile = uploadedPublicUrl("side") || uploadedPublicUrl("sideImage");
-        const backImageFile = uploadedPublicUrl("back") || uploadedPublicUrl("backImage");
-        const insuranceCertFile = uploadedPublicUrl("insuranceCert");
+        const frontImageFile =
+          publicUrlFromFile(findFile(["front", "image", "photo", "cow"])) ||
+          saveBase64Image(req.body.front, "front") ||
+          saveBase64Image(req.body.frontImage, "front");
+        const sideImageFile =
+          publicUrlFromFile(findFile(["side"])) ||
+          saveBase64Image(req.body.side, "side") ||
+          saveBase64Image(req.body.sideImage, "side");
+        const backImageFile =
+          publicUrlFromFile(findFile(["back"])) ||
+          saveBase64Image(req.body.back, "back") ||
+          saveBase64Image(req.body.backImage, "back");
+        const insuranceCertFile =
+          publicUrlFromFile(findFile(["insurance", "cert"])) ||
+          saveBase64Image(req.body.insuranceCert, "insuranceCert");
 
       if (!kosalaId) {
 
@@ -236,48 +251,41 @@ module.exports = (io) => {
   });
 
   // UPDATE COW
-  router.put(
-    "/:id",
-    upload.fields([
-      { name: "front", maxCount: 1 },
-      { name: "side", maxCount: 1 },
-      { name: "back", maxCount: 1 },
-      { name: "insuranceCert", maxCount: 1 },
-      { name: "frontImage", maxCount: 1 },
-      { name: "sideImage", maxCount: 1 },
-      { name: "backImage", maxCount: 1 },
-    ]),
-    async (req, res) => {
+  router.put("/:id", upload.any(), async (req, res) => {
 
       try {
-        const files = req.files || {};
-        const uploadedPublicUrl = (field) => {
-          const uploaded = files[field]?.[0];
-          return uploaded ? `/uploads/cows/${uploaded.filename}` : null;
-        };
+        const files = Array.isArray(req.files) ? req.files : [];
+        const publicUrlFromFile = (file) => (file ? `/uploads/cows/${file.filename}` : null);
+        const findFile = (names) => files.find((file) =>
+          names.some((name) => file.fieldname?.toLowerCase().includes(name))
+        );
 
         const updateData = {
           ...req.body,
           frontImage:
-            uploadedPublicUrl("front") ||
-            uploadedPublicUrl("frontImage") ||
+            publicUrlFromFile(findFile(["front", "image", "photo", "cow"])) ||
+            saveBase64Image(req.body.front, "front") ||
+            saveBase64Image(req.body.frontImage, "front") ||
             req.body.front ||
             req.body.frontImage ||
             undefined,
           sideImage:
-            uploadedPublicUrl("side") ||
-            uploadedPublicUrl("sideImage") ||
+            publicUrlFromFile(findFile(["side"])) ||
+            saveBase64Image(req.body.side, "side") ||
+            saveBase64Image(req.body.sideImage, "side") ||
             req.body.side ||
             req.body.sideImage ||
             undefined,
           backImage:
-            uploadedPublicUrl("back") ||
-            uploadedPublicUrl("backImage") ||
+            publicUrlFromFile(findFile(["back"])) ||
+            saveBase64Image(req.body.back, "back") ||
+            saveBase64Image(req.body.backImage, "back") ||
             req.body.back ||
             req.body.backImage ||
             undefined,
           insuranceCert:
-            uploadedPublicUrl("insuranceCert") ||
+            publicUrlFromFile(findFile(["insurance", "cert"])) ||
+            saveBase64Image(req.body.insuranceCert, "insuranceCert") ||
             req.body.insuranceCert ||
             undefined,
         };
