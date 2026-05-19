@@ -33,6 +33,14 @@ const saveBase64Image = (value, prefix) => {
   return `/uploads/cows/${filename}`;
 };
 
+const optionalUpload = (req, res, next) => {
+  const type = req.headers["content-type"] || "";
+  if (type.toLowerCase().startsWith("multipart/form-data")) {
+    return upload.any()(req, res, next);
+  }
+  return next();
+};
+
 module.exports = (io) => {
 
   // GET ALL COWS
@@ -99,7 +107,7 @@ module.exports = (io) => {
   });
 
   // ADD COW
-  router.post("/", upload.any(), async (req, res) => {
+  router.post("/", optionalUpload, async (req, res) => {
 
       try {
 
@@ -251,7 +259,7 @@ module.exports = (io) => {
   });
 
   // UPDATE COW
-  router.put("/:id", upload.any(), async (req, res) => {
+  router.put("/:id", optionalUpload, async (req, res) => {
 
       try {
         const files = Array.isArray(req.files) ? req.files : [];
