@@ -163,11 +163,17 @@ module.exports = (io) => {
         feedAmountKg,
 
         // ✅ SAVE R2 URLS
-        frontImage: front || null,
-        sideImage: side || null,
-        backImage: back || null,
+       frontImage:
+  req.body.front || null,
 
-        insuranceCert: insuranceCert || null,
+sideImage:
+  req.body.side || null,
+
+backImage:
+  req.body.back || null,
+
+insuranceCert:
+  req.body.insuranceCert || null,
 
       });
 
