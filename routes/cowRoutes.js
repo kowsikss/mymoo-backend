@@ -44,67 +44,69 @@ const optionalUpload = (req, res, next) => {
 module.exports = (io) => {
 
   // GET ALL COWS
-  router.get("/", async (req, res) => {
-    try {
+ router.get("/", async (req, res) => {
+  try {
 
-      const cows = await Cow.find();
+    const cows = await Cow.find()
+      .populate("breed", "name");
 
-      res.json(cows);
+    res.json(cows);
 
-    } catch (err) {
+  } catch (err) {
 
-      res.status(500).json({
-        error: err.message,
-      });
+    res.status(500).json({
+      error: err.message,
+    });
 
-    }
-  });
-
+  }
+});
   // GET COWS BY KOSALA
-  router.get("/kosala/:kosalaId", async (req, res) => {
+ router.get("/kosala/:kosalaId", async (req, res) => {
 
-    try {
+  try {
 
-      const cows = await Cow.find({
-        kosalaId: req.params.kosalaId,
-      });
+    const cows = await Cow.find({
+      kosalaId: req.params.kosalaId,
+    }).populate("breed", "name");
 
-      res.json(cows);
+    res.json(cows);
 
-    } catch (err) {
+  } catch (err) {
 
-      res.status(500).json({
-        error: err.message,
-      });
+    res.status(500).json({
+      error: err.message,
+    });
 
-    }
+  }
 
-  });
+});
 
   // GET SINGLE COW
-  router.get("/:id", async (req, res) => {
+ router.get("/:id", async (req, res) => {
 
-    try {
+  try {
 
-      const cow = await Cow.findById(req.params.id);
+    const cow = await Cow.findById(
+      req.params.id
+    ).populate("breed", "name");
 
-      if (!cow) {
-        return res.status(404).json({
-          message: "Cow not found",
-        });
-      }
-
-      res.json(cow);
-
-    } catch (err) {
-
-      res.status(500).json({
-        error: err.message,
+    if (!cow) {
+      return res.status(404).json({
+        message: "Cow not found",
       });
-
     }
 
-  });
+    res.json(cow);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message,
+    });
+
+  }
+
+});
 
   // ADD COW
   router.post("/", optionalUpload, async (req, res) => {
