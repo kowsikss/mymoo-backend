@@ -227,6 +227,7 @@ const router     = express.Router();
 const Doctor     = require("../models/Doctor");
 const crypto     = require("crypto");
 const nodemailer = require("nodemailer");
+const { hashPassword, verifyPassword } = require("../utils/password");
 
 /* =========================
    EMAIL TRANSPORTER
@@ -270,9 +271,9 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const doctor = await Doctor.findOne({ name, email, password });
+    const doctor = await Doctor.findOne({ name, email });
 
-    if (!doctor) {
+    if (!doctor || !(await verifyPassword(password, doctor.password))) {
       return res.status(400).json({
         message: "Invalid credentials — check name, email and password",
       });
@@ -284,7 +285,9 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    res.json(doctor);
+    const doctorData = doctor.toObject();
+    delete doctorData.password;
+    res.json(doctorData);
   } catch (err) {
     console.error("Login error:", err.message);
     res.status(500).json({ message: err.message });
@@ -385,8 +388,7 @@ router.post("/reset-password/:token", async (req, res) => {
       });
     }
 
-    // ✅ Save plain password (matching your existing login which also uses plain passwords)
-    doctor.password         = newPassword;
+    doctor.password         = await hashPassword(newPassword);
     doctor.resetToken       = null;
     doctor.resetTokenExpiry = null;
     await doctor.save();

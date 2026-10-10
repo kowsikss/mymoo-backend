@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const Doctor = require("../models/Doctor");
-const bcrypt = require("bcryptjs");
+const { hashPassword, verifyPassword } = require("../utils/password");
 const jwt = require("jsonwebtoken");
 
 // REGISTER
 router.post("/register", async (req, res) => {
   const { name, qualification, registrationNumber, phone, email, password } = req.body;
 
-  const hashed = await bcrypt.hash(password, 10);
+  const hashed = await hashPassword(password);
 
   const doctor = await Doctor.create({
     name,
@@ -19,7 +19,9 @@ router.post("/register", async (req, res) => {
     password: hashed,
   });
 
-  res.json(doctor);
+  const doctorData = doctor.toObject();
+  delete doctorData.password;
+  res.json(doctorData);
 });
 
 // LOGIN
@@ -29,7 +31,7 @@ router.post("/login", async (req, res) => {
   const doctor = await Doctor.findOne({ email });
   if (!doctor) return res.status(400).json({ message: "Doctor not found" });
 
-  const isMatch = await bcrypt.compare(password, doctor.password);
+  const isMatch = await verifyPassword(password, doctor.password);
   if (!isMatch) return res.status(400).json({ message: "Wrong password" });
 
   const token = jwt.sign(
@@ -38,7 +40,9 @@ router.post("/login", async (req, res) => {
     { expiresIn: "7d" }
   );
 
-  res.json({ token, doctor });
+  const doctorData = doctor.toObject();
+  delete doctorData.password;
+  res.json({ token, doctor: doctorData });
 });
 
 module.exports = router;

@@ -55,6 +55,7 @@ async function seedBreeds() {
         {name:"Cross breed"},
         {name:"Punganur"},
         {name:"Theni"},
+        {name:"Umblachery"},
         {name:"Malaimadu(thevarai)"},
       ]);
       console.log("✅ Breeds added successfully");

@@ -1,13 +1,13 @@
 // routes/kosalaAdminRoutes.js
 const express = require("express");
-const bcrypt  = require("bcryptjs");
 const router  = express.Router();
 const KosalaAdmin = require("../models/KosalaAdmin");
+const { hashPassword, verifyPassword } = require("../utils/password");
 
 // ── GET ALL ───────────────────────────────────────────────────
 router.get("/", async (req, res) => {
   try {
-    const admins = await KosalaAdmin.find();
+    const admins = await KosalaAdmin.find().select("-password");
     res.json(admins);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
 // ── GET BY KOSALA ID ──────────────────────────────────────────
 router.get("/kosala/:kosalaId", async (req, res) => {
   try {
-    const admin = await KosalaAdmin.findOne({ kosalaId: req.params.kosalaId });
+    const admin = await KosalaAdmin.findOne({ kosalaId: req.params.kosalaId }).select("-password");
     res.json(admin);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -31,8 +31,10 @@ router.post("/", async (req, res) => {
     if (!name || !password || !kosalaId) {
       return res.status(400).json({ message: "All fields required" });
     }
-    const admin = await KosalaAdmin.create({ name, password, kosalaId });
-    res.status(201).json(admin);
+    const admin = await KosalaAdmin.create({ name, password: await hashPassword(password), kosalaId });
+    const adminData = admin.toObject();
+    delete adminData.password;
+    res.status(201).json(adminData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -43,12 +45,6 @@ router.post("/login", async (req, res) => {
   try {
     const { name, adminName, password, kosalaId } = req.body;
     const adminNameValue = name || adminName;
-
-    console.log("🔐 Login attempt:", {
-      adminName: adminNameValue,
-      kosalaId,
-      passwordLength: password?.length,
-    });
 
     if (!adminNameValue || !password || !kosalaId) {
       return res.status(400).json({ message: "Admin name, password, and gaushala are required" });
@@ -67,24 +63,7 @@ router.post("/login", async (req, res) => {
 
     console.log("✅ Admin found:", admin.name);
 
-    // Check password — handle BOTH plaintext (old) and bcrypt (new)
-    let isMatch = false;
-
-    // Try bcrypt first (for new accounts)
-    try {
-      isMatch = await bcrypt.compare(password, admin.password);
-      if (isMatch) {
-        console.log("✅ Bcrypt password match (new account)");
-      }
-    } catch (err) {
-      // bcrypt.compare fails on plaintext passwords — that's fine
-    }
-
-    // If bcrypt fails, try direct comparison (for old plaintext accounts)
-    if (!isMatch && password === admin.password) {
-      isMatch = true;
-      console.log("✅ Plaintext password match (old account) — CONSIDER MIGRATING TO BCRYPT");
-    }
+    const isMatch = await verifyPassword(password, admin.password);
 
     if (!isMatch) {
       console.log("❌ Password mismatch");

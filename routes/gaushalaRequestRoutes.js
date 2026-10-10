@@ -3,12 +3,12 @@ const express  = require("express");
 const multer   = require("multer");
 const path     = require("path");
 const fs       = require("fs");
-const bcrypt   = require("bcryptjs");
 const router   = express.Router();
 
 const GaushalaRequest = require("../models/GaushalaRequest");
 const Gaushala        = require("../models/Gaushala");
 const KosalaAdmin     = require("../models/KosalaAdmin");
+const { hashPassword, isPasswordHash } = require("../utils/password");
 
 // ── Multer ────────────────────────────────────────────────────
 const storage = multer.diskStorage({
@@ -49,7 +49,7 @@ router.post("/", upload.single("certificateFile"), async (req, res) => {
       contactNumber:      contactNumber      || null,
       email,
       adminName,
-      password,
+      password: await hashPassword(password),
       certificateFile:    req.file ? req.file.path : null,
       lat:  lat  ? parseFloat(lat)  : null,
       lon:  lon  ? parseFloat(lon)  : null,
@@ -68,7 +68,7 @@ router.get("/", async (req, res) => {
   try {
     const filter = {};
     if (req.query.status) filter.status = req.query.status;
-    res.json(await GaushalaRequest.find(filter).sort({ createdAt: -1 }));
+    res.json(await GaushalaRequest.find(filter).select("-password").sort({ createdAt: -1 }));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -103,7 +103,9 @@ router.put("/:id/approve", async (req, res) => {
 
     // STEP 3 — Save KosalaAdmin login account
     try {
-      const hashedPassword = await bcrypt.hash(request.password, 10);
+      const hashedPassword = isPasswordHash(request.password)
+        ? request.password
+        : await hashPassword(request.password);
       const adminUser = await new KosalaAdmin({
         name:     request.adminName,
         email:    request.email,              // ✅ CRITICAL — needed for login

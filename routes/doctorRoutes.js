@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const Doctor = require("../models/Doctor");
+const { hashPassword } = require("../utils/password");
 
 // GET ALL DOCTORS
 router.get("/", async (req, res) => {
   try {
-    const doctors = await Doctor.find().sort({ createdAt: -1 });
+    const doctors = await Doctor.find().select("-password").sort({ createdAt: -1 });
     res.json(doctors);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -15,7 +16,7 @@ router.get("/", async (req, res) => {
 // GET SINGLE DOCTOR BY ID
 router.get("/:id", async (req, res) => {
   try {
-    const doctor = await Doctor.findById(req.params.id);
+    const doctor = await Doctor.findById(req.params.id).select("-password");
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
     res.json(doctor);
   } catch (err) {
@@ -63,8 +64,13 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const doctor = await Doctor.create(req.body);
-    res.status(201).json(doctor);
+    const doctor = await Doctor.create({
+      ...req.body,
+      password: await hashPassword(password),
+    });
+    const doctorData = doctor.toObject();
+    delete doctorData.password;
+    res.status(201).json(doctorData);
   } catch (err) {
     console.error("Error creating doctor:", err.message);
     res.status(500).json({ error: err.message });
@@ -74,11 +80,14 @@ router.post("/", async (req, res) => {
 // UPDATE DOCTOR
 router.put("/:id", async (req, res) => {
   try {
+    const updates = { ...req.body };
+    if (updates.password) updates.password = await hashPassword(updates.password);
+
     const updated = await Doctor.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updates,
       { new: true }
-    );
+    ).select("-password");
     if (!updated) return res.status(404).json({ message: "Doctor not found" });
     res.json(updated);
   } catch (err) {
